@@ -5,11 +5,9 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" type="image/x-icon" href="imgs/iconos/home.png">
 
-	<!-- Boxicons -->
 	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 	<link href='https://unpkg.com/boxicons@2.1.4/dist/boxicons.js' rel='stylesheet'>
 
-	<!-- My CSS -->
 	<link rel="stylesheet" href="styles/styles.css">
 	<link rel="stylesheet" href="styles/dashboard.css">
 
@@ -18,7 +16,6 @@
 	<title>Home</title>
 </head>
 <body>
-	<!-- SIDEBAR -->
 	<section id="sidebar">
 		<a href="#" class="brand">
 			<i class='bx bxs-happy bx-lg'></i>
@@ -59,79 +56,54 @@
 		<ul class="side-menu bottom">
 			<li>
 				<a href="#">
-					<i class='bx bxs-cog bx-sm bx-spin-hover' ></i>
-					<span class="text">Settings</span>
+					<i class='bx bxs- bx-user' ></i>
+					<span class="text">Mi Perfil</span>
 				</a>
 			</li>
 			<li>
 				<a href="#" class="logout">
 					<i class='bx bx-power-off bx-sm bx-burst-hover' ></i>
-					<span class="text">Logout</span>
+					<span class="text">Cerrar sesión</span>
 				</a>
 			</li>
 		</ul>
 	</section>
-	<!-- SIDEBAR -->
-
-
-
-	<!-- CONTENT -->
 	<section id="content">
-		<!-- NAVBAR -->
-<nav>
-    <i class='bx bx-menu bx-sm' ></i>
-    <a href="#" class="nav-link">Categories</a>
-    <form action="#">
-        <div class="form-input">
-            <input type="search" placeholder="Search...">
-            <button type="submit" class="search-btn"><i class='bx bx-search' ></i></button>
-        </div>
-    </form>
-    <input type="checkbox" class="checkbox" id="switch-mode" hidden />
-    <label class="swith-lm" for="switch-mode">
-        <i class="bx bxs-moon"></i>
-        <i class="bx bx-sun"></i>
-        <div class="ball"></div>
-    </label>
-
-    <!-- Notification Bell -->
-    <a href="#" class="notification" id="notificationIcon">
-        <i class='bx bxs-bell bx-tada-hover' ></i>
-        <span class="num">8</span>
-    </a>
-    <div class="notification-menu" id="notificationMenu">
-        <ul>
-            <li>New message from John</li>
-            <li>Your order has been shipped</li>
-            <li>New comment on your post</li>
-            <li>Update available for your app</li>
-            <li>Reminder: Meeting at 3PM</li>
-        </ul>
-    </div>
-
-    <!-- Profile Menu -->
-    <a href="#" class="profile" id="profileIcon">
-        <img src="https://placehold.co/600x400/png" alt="Profile">
-    </a>
-    <div class="profile-menu" id="profileMenu">
-        <ul>
-            <li><a href="#">My Profile</a></li>
-            <li><a href="#">Settings</a></li>
-            <li><a href="#">Log Out</a></li>
-        </ul>
-    </div>
-</nav>
-<!-- NAVBAR -->
+		<nav>
+			<i class='bx bx-menu bx-sm' ></i>
+			
+			<form action="#">
+				<div class="form-input">
+					<input type="search" placeholder="Search...">
+					<button type="submit" class="search-btn"><i class='bx bx-search' ></i></button>
+				</div>
+			</form>
+			
+			<input type="checkbox" class="checkbox" id="switch-mode" hidden />
+			<label class="swith-lm" for="switch-mode">
+				<i class="bx bxs-moon"></i>
+				<i class="bx bx-sun"></i>
+				<div class="ball"></div>
+			</label>
 
 
-		<!-- MAIN -->
+			<a href="#" class="profile" id="profileIcon">
+				<img src="https://placehold.co/600x400/png" alt="Profile">
+			</a>
+			<div class="profile-menu" id="profileMenu">
+				<ul>
+					<li><a href="#">Mi perfil</a></li>
+					<li><a href="#">Cerrar sesión</a></li>
+				</ul>
+			</div>
+		</nav>
 		<main>
 			<div class="head-title">
 				<div class="left">
-					<h1>Dashboard</h1>
+					<h1 class="passific">Dashboard</h1>
 					<ul class="breadcrumb">
 						<li>
-							<a href="#">Dashboard</a>
+							<a href="#"><span>Dashboard</span></a>
 						</li>
 						<li><i class='bx bx-chevron-right' ></i></li>
 						<li>
@@ -139,10 +111,6 @@
 						</li>
 					</ul>
 				</div>
-				<a href="https://codepen.io/saglik216/pen/LEVjwBV" class="btn-download" target="_blink">
-					<i class='bx bxs-cloud-download bx-fade-down-hover' ></i>
-					<span class="text">V2.5 Released</span>
-				</a>
 			</div>
 
 			<ul class="box-info">
@@ -169,7 +137,6 @@
 				</li>
 			</ul>
 
-
 			<div class="table-data">
 				<div class="order">
 					<div class="head">
@@ -194,39 +161,7 @@
 								<td>18-10-2021</td>
 								<td><span class="status completed">Completed</span></td>
 							</tr>
-							<tr>
-								<td>
-									<img src="https://placehold.co/600x400/png">
-									<p>Ryan Doe</p>
-								</td>
-								<td>01-06-2022</td>
-								<td><span class="status pending">Pending</span></td>
-							</tr>
-							<tr>
-								<td>
-									<img src="https://placehold.co/600x400/png">
-									<p>Tarry White</p>
-								</td>
-								<td>14-10-2021</td>
-								<td><span class="status process">Process</span></td>
-							</tr>
-							<tr>
-								<td>
-									<img src="https://placehold.co/600x400/png">
-									<p>Selma</p>
-								</td>
-								<td>01-02-2023</td>
-								<td><span class="status pending">Pending</span></td>
-							</tr>
-							<tr>
-								<td>
-									<img src="https://placehold.co/600x400/png">
-									<p>Andreas Doe</p>
-								</td>
-								<td>31-10-2021</td>
-								<td><span class="status completed">Completed</span></td>
-							</tr>
-						</tbody>
+							</tbody>
 					</table>
 				</div>
 				<div class="todo">
@@ -241,18 +176,6 @@
 							<p>Check Inventory</p>
 							<i class='bx bx-dots-vertical-rounded' ></i>
 						</li>
-						<li class="completed">
-							<p>Manage Delivery Team</p>
-							<i class='bx bx-dots-vertical-rounded' ></i>
-						</li>
-						<li class="not-completed">
-							<p>Contact Selma: Confirm Delivery</p>
-							<i class='bx bx-dots-vertical-rounded' ></i>
-						</li>
-						<li class="completed">
-							<p>Update Shop Catalogue</p>
-							<i class='bx bx-dots-vertical-rounded' ></i>
-						</li>
 						<li class="not-completed">
 							<p>Count Profit Analytics</p>
 							<i class='bx bx-dots-vertical-rounded' ></i>
@@ -261,11 +184,6 @@
 				</div>
 			</div>
 		</main>
-		<!-- MAIN -->
-	</section>
-	<!-- CONTENT -->
-	
-
-	<script src="script.js"></script>
+		</section>
 </body>
 </html>

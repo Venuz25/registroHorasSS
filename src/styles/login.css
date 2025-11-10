@@ -1,11 +1,10 @@
 :root{
-  /* Colores principales */
-    --color-primary: #3745b5;
-    --color-primary-600: #2f3aa0;
-    --color-accent: #e46569;
-    --color-accent-600: #d14b52;
-    --color-secondary: #60b8d4;
-    --color-warm: #ecaf81;
+        --color-primary: #3745b5;
+        --color-primary-600: #2f3aa0;
+        --color-accent: #e46569;
+        --color-accent-600: #d14b52;
+        --color-secondary: #60b8d4;
+        --color-warm: #ecaf81;
 }
 
 html, body {
