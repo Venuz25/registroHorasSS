@@ -1,25 +1,106 @@
 <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="icon" type="image/x-icon" href="src/imgs/iconos/login.png">
-        <title>Registro de horas SS</title>
-    <link rel="stylesheet" href="src/styles/styles.css">
-    <link rel="stylesheet" href="src/styles/login.css">
-    </head>
-    <body>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso Servicio Social</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="src/login/login.css">
+    <link rel="shortcut icon" href="./src/icons/gatito.png" type="image/png">
+</head>
+<body>
+    <div class="main">  	
+        <input type="checkbox" id="chk" aria-hidden="true">
 
-        <div class="container" onclick="">
-            <div class="top"></div>
-            <div class="bottom"></div>
-            <div class="center">
-                <h2>Iniciar Sesión</h2>
-                <input type="user" placeholder="username">
-                <input type="password" placeholder="password">
-                <button type="submit">Login</button>
+            <div class="signup">
+                <form id="loginForm">
+                    <label for="chk" aria-hidden="true">Login</label>
+                    
+                    <input type="email" id="login_email" placeholder="Email" required="">
+                    <input type="password" id="login_password" placeholder="Password" required="">
+                    <button type="submit">Iniciar Sesión</button>
+                </form>
             </div>
-        </div>
-        <h2>&nbsp;</h2>
-    </body>
+
+            <div class="login">
+                <form id="signupForm">
+                    <label for="chk" aria-hidden="true">Registro</label>
+                    
+                    <input type="text" id="reg_nombre" placeholder="Nombre Completo" required="">
+                    <input type="text" id="reg_servicio" placeholder="No. Servicio" required="">
+                    <input type="email" id="reg_email" placeholder="Email" required="">
+                    <input type="password" id="reg_password" placeholder="Password" required="">
+                    
+                    <div class="date-row">
+                        <input type="date" id="reg_inicio" required title="Fecha de Inicio">
+                        <input type="date" id="reg_fin" required title="Fecha de Término">
+                    </div>
+
+                    <button type="submit">Registrarse</button>
+                </form>
+            </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login_email').value;
+            const password = document.getElementById('login_password').value;
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Bienvenido ' + data.rol);
+                    // Guardar sesión
+                    localStorage.setItem('usuario_id', data.id_usuario);
+                    localStorage.setItem('rol', data.rol);
+                    
+                    if(data.rol === 'admin') window.location.href = './src/admin/admin.html';
+                    else window.location.href = './src/alumno/alumnos.html';
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Error al conectar con Python');
+            }
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const datos = {
+                nombre_completo: document.getElementById('reg_nombre').value,
+                num_servicio: document.getElementById('reg_servicio').value,
+                email: document.getElementById('reg_email').value,
+                password: document.getElementById('reg_password').value,
+                fecha_inicio: document.getElementById('reg_inicio').value,
+                fecha_fin: document.getElementById('reg_fin').value
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/registro_alumno', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('¡Registro exitoso! Ahora da click en "Login" para entrar.');
+                    document.getElementById('chk').checked = true;
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error al conectar con el servidor');
+            }
+        });
+    </script>
+</body>
 </html>

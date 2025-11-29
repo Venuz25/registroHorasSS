@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Servicio Social</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="alumnos.css">
+    <link rel="shortcut icon" href="../icons/calendario.png" type="image/png">
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <div class="logo-placeholder">SS</div>
+            <h2 style="margin:0; font-weight: 400;">Bienvenido, <b id="lblNombre">Cargando...</b></h2>
+        </div>
+        <div class="header-right">
+            <div class="stat-box">Horas: <span id="lblHorasTotal">0</span></div>
+            <div class="stat-box">Días: <span id="lblDiasTotal">0</span></div>
+            <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <div class="main-container">  
+        <div class="calendar-wrapper" id="calendarContainer">
+            <p style="text-align:center; margin-top:50px;">Cargando calendario...</p>
+        </div>
+
+        <div class="side-modal" id="sideModal">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div class="modal-header">Registro del Día <br><small id="modalDateLabel" style="font-size:0.9rem; color:#777"></small></div>
+
+            <form id="dayForm">
+                <input type="hidden" id="inputFecha">
+
+                <div class="form-group">
+                    <label>Tipo de Día</label>
+                    <select id="selectTipo" onchange="toggleHoursInput()">
+                        <option value="habil">Día Hábil (Asistí)</option>
+                        <option value="inhabil">Inhábil (Fin de semana/Festivo)</option>
+                        <option value="vacaciones">Vacaciones</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="groupHoras">
+                    <label>Horas Asistidas</label>
+                    <input type="number" id="inputHoras" min="1" max="10" step="0.5" placeholder="Ej: 4">
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción de Actividades (Opcional)</label>
+                    <textarea id="inputDesc" rows="4" placeholder="¿Qué hiciste hoy?"></textarea>
+                </div>
+
+                <button type="button" class="btn-save" onclick="guardarDia()">Guardar Registro</button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        let alumnoId = null;
+        let registrosMap = {};
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = localStorage.getItem('usuario_id');
+            if (!userId) {
+                window.location.href = 'index.html';
+                return;
+            }
+            cargarDatosAlumno(userId);
+        });
+
+        async function cargarDatosAlumno(userId) {
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/datos_alumno/${userId}`);
+                const json = await res.json();
+                
+                if (res.ok) {
+                    const data = json.data;
+                    alumnoId = data.id_alumno;
+                    
+                    document.getElementById('lblNombre').textContent = data.nombre_completo.split(' ')[0]; 
+                    document.getElementById('lblHorasTotal').textContent = data.horas_totales_acumuladas || 0;
+                    document.getElementById('lblDiasTotal').textContent = data.dias_asistidos || 0;
+
+                    registrosMap = {};
+                    if(data.registros) {
+                        data.registros.forEach(reg => {
+                            const fechaStr = new Date(reg.fecha_actividad).toISOString().split('T')[0];
+                            registrosMap[fechaStr] = reg;
+                        });
+                    }
+
+                    renderCalendar(data.fecha_inicio, data.fecha_termino);
+
+                } else {
+                    alert("Error cargando datos: " + json.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error de conexión");
+            }
+        }
+
+        function renderCalendar(startStr, endStr) {
+            console.log("Fechas recibidas:", startStr, endStr);
+            const container = document.getElementById('calendarContainer');
+            container.innerHTML = ''; 
+
+            const crearFecha = (fechaTexto) => {
+                if (fechaTexto.length === 10) return new Date(fechaTexto + 'T00:00:00');
+                return new Date(fechaTexto);
+            };
+
+            let current = crearFecha(startStr);
+            const end = crearFecha(endStr);
+
+            while (current <= end) {
+                const year = current.getFullYear();
+                const month = current.getMonth(); 
+                
+                const monthBlock = document.createElement('div');
+                monthBlock.className = 'month-block';
+                
+                let monthName = current.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                monthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+                monthBlock.innerHTML = `<h3 class="month-title">${monthName}</h3>`;
+
+                const grid = document.createElement('div');
+                grid.className = 'days-grid';
+
+                const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                diasSemana.forEach(dia => {
+                    grid.innerHTML += `<div class="day-header">${dia}</div>`;
+                });
+
+                const primerDiaMes = new Date(year, month, 1).getDay(); 
+                for(let i=0; i<primerDiaMes; i++) {
+                    grid.innerHTML += `<div></div>`; 
+                }
+
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                for(let d=1; d<=daysInMonth; d++) {
+                    const mesStr = (month + 1).toString().padStart(2, '0');
+                    const diaStrNum = d.toString().padStart(2, '0');
+                    const fechaISO = `${year}-${mesStr}-${diaStrNum}`;
+                    
+                    const diaFecha = new Date(fechaISO + 'T00:00:00');
+
+                    if (diaFecha > end) break; 
+                    if (diaFecha < crearFecha(startStr)) {
+                         grid.innerHTML += `<div></div>`; 
+                         continue;
+                    }
+
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell';
+                    
+                    const registro = registrosMap[fechaISO];
+                    let contenidoInfo = '-';
+
+                    if (registro) {
+                        if (registro.tipo_dia === 'habil') {
+                            cell.classList.add('status-habil');
+                            contenidoInfo = `${registro.horas}h`;
+                        } else if (registro.tipo_dia === 'vacaciones') {
+                            cell.classList.add('status-vacaciones');
+                            contenidoInfo = 'VAC';
+                        } else {
+                            cell.classList.add('status-inhabil');
+                            contenidoInfo = 'INH';
+                        }
+                    } else {
+                        cell.classList.add('status-empty');
+                    }
+
+                    cell.innerHTML = `
+                        <span class="day-number">${d}</span>
+                        <span class="day-info">${contenidoInfo}</span>
+                    `;
+                    
+                    cell.onclick = () => openModal(fechaISO, registro);
+                    grid.appendChild(cell);
+                }
+
+                monthBlock.appendChild(grid);
+                container.appendChild(monthBlock);
+
+                current = new Date(year, month + 1, 1);
+            }
+        }
+
+        // --- MODAL ---
+        function openModal(dateStr, registroExistente) {
+            const modal = document.getElementById('sideModal');
+            document.getElementById('modalDateLabel').textContent = dateStr;
+            document.getElementById('inputFecha').value = dateStr;
+
+            if (registroExistente) {
+                document.getElementById('selectTipo').value = registroExistente.tipo_dia;
+                document.getElementById('inputHoras').value = registroExistente.horas > 0 ? registroExistente.horas : '';
+                document.getElementById('inputDesc').value = registroExistente.descripcion || '';
+            } else {
+                document.getElementById('selectTipo').value = 'habil';
+                document.getElementById('inputHoras').value = '';
+                document.getElementById('inputDesc').value = '';
+            }
+
+            toggleHoursInput(); 
+            modal.classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('sideModal').classList.remove('open');
+        }
+
+        function toggleHoursInput() {
+            const tipo = document.getElementById('selectTipo').value;
+            const groupHoras = document.getElementById('groupHoras');
+            if (tipo === 'habil') {
+                groupHoras.style.display = 'block';
+            } else {
+                groupHoras.style.display = 'none';
+            }
+        }
+
+        async function guardarDia() {
+            const fecha = document.getElementById('inputFecha').value;
+            const tipo = document.getElementById('selectTipo').value;
+            const horas = document.getElementById('inputHoras').value;
+            const desc = document.getElementById('inputDesc').value;
+
+            if (tipo === 'habil' && !horas) {
+                alert("Debes ingresar el número de horas.");
+                return;
+            }
+
+            const payload = {
+                id_alumno: alumnoId,
+                fecha: fecha,
+                tipo_dia: tipo,
+                horas: horas,
+                descripcion: desc
+            };
+
+            try {
+                const res = await fetch('http://127.0.0.1:5000/guardar_dia', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    closeModal();
+                    cargarDatosAlumno(localStorage.getItem('usuario_id'));
+                } else {
+                    alert("Error al guardar");
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../../index.html';
+        }
+    </script>
+
+</body>
+</html>

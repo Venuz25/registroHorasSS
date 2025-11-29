@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Panel de Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="shortcut icon" href="../icons/usuario.png" type="image/png">
+</head>
+<body>
+
+    <header>
+        <div class="header-logo">ADMIN PORTAL</div>
+        <div style="display:flex; align-items:center;">
+            <div class="header-stats">
+                Alumnos Activos: <span id="activeCount">-</span>
+            </div>
+            <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2 style="color: #444; margin-bottom: 30px;">Tablero de Alumnos</h2>
+        <div class="grid" id="studentsGrid">
+            <p style="text-align:center;">Cargando alumnos...</p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="fullModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            
+            <div class="student-header-container">
+                
+                <div class="student-info-left">
+                    <h2 id="mName">Cargando Nombre...</h2>
+                    <div class="student-meta">
+                        <div><b>Matrícula:</b> <span id="mServiceId">---</span></div>
+                        <div><b>Periodo:</b> <span id="mPeriod">---</span></div>
+                    </div>
+                    <button id="btnToggleStatus" class="btn-status-action" onclick="toggleStatus()">
+                        Cargando...
+                    </button>
+                </div>
+
+                <div class="student-stats-right">
+                    <div class="stat-block">
+                        <div>Horas</div>
+                        <span id="mTotalHours">0</span>
+                    </div>
+                    <div class="stat-block">
+                        <div>Días</div>
+                        <span id="mTotalDays">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="table-title">Historial de Registros</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo de Día</th>
+                        <th>Horas</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+        });
+
+        let alumnosCache = []; 
+        let currentAlumnoId = null;
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/admin/lista_alumnos');
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('activeCount').textContent = data.activos;
+                    alumnosCache = data.alumnos;
+                    renderCards(data.alumnos);
+                } else {
+                    document.getElementById('studentsGrid').innerHTML = '<p>Error al cargar datos.</p>';
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('studentsGrid').innerHTML = '<p style="color:red">Error de conexión.</p>';
+            }
+        }
+
+        function renderCards(alumnos) {
+            const grid = document.getElementById('studentsGrid');
+            grid.innerHTML = '';
+
+            if (!alumnos || alumnos.length === 0) {
+                grid.innerHTML = '<p>No hay alumnos registrados.</p>';
+                return;
+            }
+
+            alumnos.forEach(alu => {
+                const esActivo = (alu.activo === 1); 
+                const claseEstado = esActivo ? 'badge-activo' : 'badge-inactivo';
+                const textoEstado = esActivo ? 'Activo' : 'Finalizado';
+                const horas = alu.horas_totales_acumuladas || 0;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => openStudentModal(alu);
+
+                card.innerHTML = `
+                    <span class="badge ${claseEstado}">${textoEstado}</span>
+                    <h3>${alu.nombre_completo}</h3>
+                    <p><b>Matrícula:</b> ${alu.num_servicio}</p>
+                    <p><b>Progreso:</b> ${horas} Horas</p>
+                    <div class="card-row">
+                        <span>Inicio: ${alu.fecha_inicio}</span>
+                        <span>Fin: ${alu.fecha_termino}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function openStudentModal(alumno) {
+            currentAlumnoId = alumno.id_alumno;
+            
+            document.getElementById('mName').textContent = alumno.nombre_completo;
+            document.getElementById('mServiceId').textContent = alumno.num_servicio;
+            document.getElementById('mPeriod').textContent = `${alumno.fecha_inicio} al ${alumno.fecha_termino}`;
+            document.getElementById('mTotalHours').textContent = alumno.horas_totales_acumuladas;
+            document.getElementById('mTotalDays').textContent = alumno.dias_asistidos || 0;
+
+            const btn = document.getElementById('btnToggleStatus');
+            const esActivo = (alumno.activo === 1);
+            
+            if (esActivo) {
+                btn.textContent = "Finalizar Servicio";
+                btn.className = "btn-status-action btn-finalizar";
+            } else {
+                btn.textContent = "Reactivar Alumno";
+                btn.className = "btn-status-action btn-reactivar";
+            }
+            
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Cargando historial...</td></tr>';
+            
+            document.getElementById('fullModal').classList.add('open');
+
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/admin/detalle_alumno/${alumno.id_alumno}`);
+                const json = await res.json();
+                
+                if (res.ok) {
+                    renderTable(json.registros);
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4">No se pudo cargar el historial.</td></tr>';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderTable(registros) {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+
+            if (!registros || registros.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Sin registros aún.</td></tr>';
+                return;
+            }
+
+            registros.forEach(reg => {
+                const tr = document.createElement('tr');
+                
+                let tagClass = 'inhabil';
+                if(reg.tipo_dia === 'habil') tagClass = 'habil';
+                if(reg.tipo_dia === 'vacaciones') tagClass = 'vacaciones';
+
+                tr.innerHTML = `
+                    <td>${reg.fecha_actividad}</td>
+                    <td><span class="tag ${tagClass}">${reg.tipo_dia.toUpperCase()}</span></td>
+                    <td style="font-weight:bold;">${reg.horas}</td>
+                    <td>${reg.descripcion || ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function toggleStatus() {
+            if(!confirm("¿Confirmar cambio de estado?")) return;
+
+            try {
+                const res = await fetch('http://127.0.0.1:5000/admin/cambiar_estado', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id_alumno: currentAlumnoId })
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    loadDashboard(); 
+                } else {
+                    alert("Error al actualizar estado.");
+                }
+            } catch (e) {
+                alert("Error de conexión.");
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('fullModal').classList.remove('open');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.replace('index.html');
+        }
+    </script>
+</body>
+</html>
