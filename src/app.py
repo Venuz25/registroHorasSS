@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 CORS(app)
@@ -33,7 +34,7 @@ def login():
     conn.close()
 
     if user:
-        if user['password_hash'] == password: 
+        if check_password_hash(user['password_hash'], password): 
             return jsonify({
                 "status": "success",
                 "message": "Login exitoso",
@@ -72,8 +73,9 @@ def registro_alumno():
         if cursor.fetchone():
             return jsonify({"status": "error", "message": "Ya existe un alumno registrado con ese nombre exacto."}), 409
 
+        password_hash = generate_password_hash(password)
         query_user = "INSERT INTO usuarios (email, password_hash, rol) VALUES (%s, %s, 'alumno')"
-        cursor.execute(query_user, (email, password))
+        cursor.execute(query_user, (email, password_hash))
         id_usuario_generado = cursor.lastrowid
 
         query_alumno = """
